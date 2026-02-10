@@ -1,0 +1,15 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force-response: true
+
+spring:
+  datasource:
+    driver-class-name: com.scalar.db.sql.jdbc.SqlJdbcDriver
+    url: jdbc:scalardb:?scalar.db.sql.connection_mode=cluster&scalar.db.sql.cluster_mode.contact_points=indirect:localhost&scalar.db.sql.default_namespace_name=test
+  application:
+    name: review-app
+  profiles:
+    active: local

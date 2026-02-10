@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Review API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /reviews:
+    post:
+      summary: 投稿レビューを作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "200 success!!"
+    get:
+      summary: 全レビューを取得
+      responses:
+        '200':
+          description: レビュー一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+components:
+  schemas:
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        userId:
+          type: string
+        star:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+    ReviewCreate:
+      type: object
+      required:
+        - productId
+        - userId
+        - star
+      properties:
+        productId:
+          type: string
+        userId:
+          type: string
+        star:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+
