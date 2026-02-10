@@ -1,30 +1,74 @@
-# Entity 実装パターン
+# Service 実装パターン
 
 ## 基本Template
 
 ```java
-package <package>.domain.model;
+package <package>.service;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import com.github.f4b6a3.uuid.UuidCreator;
+import <package>.model.dto.request.<Entity>CreateRequest;
+import <package>.model.entity.<Entity>;
+import <package>.repository.<Entity>Repository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Table("<table_name>")
-public record <EntityName>(
-    @Id
-    String id,
-    <Type> <field1>,
-    <Type> <field2>
-) {
-    // 更新用メソッド（新しいインスタンスを返す）
-    public <EntityName> with<Field>(<Type> new<Field>) {
-        return new <EntityName>(this.id, new<Field>, this.<field2>);
+import java.util.List;
+import java.util.stream.StreamSupport;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class <Entity>Service {
+
+    private final <Entity>Repository repository;
+
+    public List<<Entity>> findAll() {
+        return StreamSupport.stream(repository.findAll().spliterator(), false)
+            .toList();
+    }
+
+    public <Entity> findById(String id) {
+        return repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("<Entity> not found: " + id));
+    }
+
+    public <Entity> create(<Entity>CreateRequest request) {
+        var id = UuidCreator.getTimeOrderedEpoch().toString();
+        var entity = new <Entity>(
+            id,
+            request.field1(),
+            request.field2()
+        );
+        repository.insert(entity);
+        return entity;
+    }
+
+    public <Entity> update(String id, <Entity>UpdateRequest request) {
+        var entity = findById(id);
+        var updated = entity.withField1(request.field1());
+        repository.update(updated);
+        return updated;
+    }
+
+    public void delete(String id) {
+        var entity = findById(id);
+        repository.delete(entity);
     }
 }
 ```
 
-## ID 生成
+## 必須ルール
 
-ID は UUID v7 を使用して自分で生成する：
+| ルール | 説明 |
+|--------|------|
+| `@Transactional` | クラスレベルで付与（メソッド単位ではない） |
+| `@RequiredArgsConstructor` | コンストラクタインジェクション（`@Autowired`フィールドインジェクション禁止） |
+| `insert()` / `update()` | 明示的に使い分け（`save()` 禁止） |
+| UUID v7 | `UuidCreator.getTimeOrderedEpoch().toString()` で自分で生成 |
+| 戻り値 | Entity を返す（Response DTO は Controller で変換） |
+
+## ID 生成
 
 ```java
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -33,94 +77,28 @@ import com.github.f4b6a3.uuid.UuidCreator;
 String id = UuidCreator.getTimeOrderedEpoch().toString();
 ```
 
-## 具体例
-
-### 基本的な Entity
-
-```java
-@Table("items")
-public record Item(
-    @Id
-    String id,
-    String name,
-    int price
-) {
-    public Item withPrice(int newPrice) {
-        return new Item(this.id, this.name, newPrice);
-    }
-}
-```
-
-### 複合主キー（@Id なし）
-
-```java
-// ScalarDB SQL: PRIMARY KEY (order_id, item_id)
-@Table("order_items")
-public record OrderItem(
-    String orderId,
-    String itemId,
-    int quantity
-) {
-    public OrderItem withQuantity(int newQuantity) {
-        return new OrderItem(this.orderId, this.itemId, newQuantity);
-    }
-}
-```
-
-### 複数フィールドの更新
-
-```java
-@Table("customers")
-public record Customer(
-    @Id
-    String id,
-    String name,
-    int creditLimit,
-    int creditTotal
-) {
-    public Customer withCreditTotal(int newCreditTotal) {
-        return new Customer(this.id, this.name, this.creditLimit, newCreditTotal);
-    }
-
-    public Customer withName(String newName) {
-        return new Customer(this.id, newName, this.creditLimit, this.creditTotal);
-    }
-}
-```
-
-## Record の自動生成メソッド
-
-Record は以下を自動生成するため、明示的に書く必要なし：
-
-- **コンストラクタ**: 全フィールドを引数に取る
-- **getter**: `fieldName()` 形式（例: `item.price()`）
-- **equals()**: フィールド値で比較
-- **hashCode()**: フィールド値から生成
-- **toString()**: `Item[id=..., name=Apple, price=100]` 形式
 
 ## 禁止パターン
 
 ```java
-// Bad: class で定義
-public class Item {
-    private final String id;
-    // ...
+// Bad: save() を使用
+repository.save(entity);  // 禁止
+
+// Bad: @Autowired フィールドインジェクション
+@Autowired
+private ReviewRepository reviewRepository;  // 禁止
+
+// Bad: メソッド単位で @Transactional
+@Transactional  // クラスレベルのみ
+public Review create(...) { }
+
+// Bad: Response DTO を返す
+public ReviewResponse create(...) {  // Entity を返すこと
+    return new ReviewResponse(...);
 }
 
-// Bad: Setter を定義（record ではコンパイルエラー）
-public record Item(...) {
-    public void setPrice(int price) { }
+// Bad: ID を外部から受け取る
+public Review create(String id, ...) {  // UUID v7 を自分で生成すること
+    ...
 }
-
-// Bad: ID を int や long で定義
-public record Item(
-    @Id
-    int id  // String を使用すること
-) {}
-
-// Bad: リレーションを使用
-public record Customer(
-    @OneToMany
-    List<Order> orders  // 禁止
-) {}
 ```

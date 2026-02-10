@@ -82,6 +82,26 @@ varは積極的に使用して構わないが、以下の点に注意するこ�
 * 長いメソッド（50行以上） - 分割検討
 * var を無理に使う - 型を明示した方が読みやすい場合も多い
 
+#### MUST DO
+
+- `@EnableScalarDbRepositories` をメインクラスに付与
+- `insert()` と `update()` を明示的に使い分け
+- `@Transactional` をリポジトリに付与
+- エンティティはイミュータブル（final フィールド）
+- Service/Controllerには `@RequiredArgsConstructor` を付与（コンストラクタを手書きしない）
+- Serviceクラスには `@Transactional` をクラスレベルで付与
+- 読み取り専用メソッドには `@Transactional(readOnly = true)` を付与
+- DTO は Java の `record` で定義する
+
+#### MUST NOT
+
+- `save()` メソッドを使用しない
+- 複合主キーに `@Id` を使用しない
+- `@Retryable` などのRetry処理を使用しない
+- Serviceの各メソッドに `@Transactional` を付けない（クラスレベルのみ）
+- `@GetMapping`/`@PostMapping`等に `value` 以外のパラメータを指定しない（produces等は不要）
+
+
 ### 重要な考え方：
 
 * Immutability（不変性）を意識

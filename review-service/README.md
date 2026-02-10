@@ -1,52 +1,46 @@
 # 説明
-このプロジェクトはReactとJavaで実装されているWebアプリです
-裏側ではScalarDB, ScalarDB Clusterも利用しておりストレージはMySQLです
-レビューを登録、参照できる機能を実装
-Docker（MySQL）にデータをマウントしており、docker-compose donw -vコマンドでマウントを削除しない限りローカルにデータは残る
 
+このプロジェクトではアプリ開発用のSKILLsを作成し性能検証を行なっています。
+サンプルとしてAPIをScalarDB/ Java21/ SpringBootで実装しました。
+Zenn（https://zenn.dev/articles/2bade45ac9078a/） で公開したブログの詳細はこちらに記載されています。
+
+## 事前準備
+
+### 必要なコマンドとバージョン
+- Java21
+- docker-compose
+
+### Schema Loaderのダウンロード
+scalarDB Schema LoaderのJarファイルをローカルに落としてきてください。
 ```shell
-scalar.db.storage=jdbc
-scalar.db.contact_points=jdbc:mysql://mysql:3306
-scalar.db.username=root
-scalar.db.password=root
-
-# Standalone mode
-scalar.db.cluster.node.standalone_mode.enabled=true
-
-# SQL
-scalar.db.sql.enabled=true
-
-# License key configurations
-scalar.db.cluster.node.licensing.license_key=<license_keyをもらう必要があり>
-scalar.db.cluster.node.licensing.license_check_cert_pem=<pemを取得する必要あり>
+curl -OL https://github.com/scalar-labs/scalardb/releases/download/v3.13.0/scalardb-schema-loader-3.13.0.jar
 ```
 
+## アプリの起動方法
+
+プロジェクトのルートで下記のコマンドを実行してください。
+
 ```shell
-curl -OL https://github.com/scalar-labs/scalardb/releases/download/v3.5.2/scalardb-schema-loader-3.5.2.jar
-
-# schema loader 用の接続情報
-touch scalardb.properties
-# ローカルでScalarDB使うためのライセンスキーとかが書いてある
-touch scalardb-cluster.properties
-# ScalarDB Cluster と MySQLを立ち上げる用
-touch docker-compose.yml
-# schama loader経由でDBにテーブル作るためのJson
-touch schema.json
-
-java -jar scalardb-schema-loader.jar --config scalardb.properties --schema-file schema.json --coordinator
+docker-compose up -d
 docker exec -it mysql bash
-mysql> mysql -u root -p
-docker-compose donw -v # volumeも削除してコンテナダウン
-
-java -jar scalardb-schema-loader.jar --config scalardb.properties --schema-file schema.json --coordinator
-
+mysql> mysql -u root -p # これでtest データベースと review テーブルが作成されているか確認
+# mysqlが起動したら下記のコマンドを実行
+java -jar scalardb-schema-loader-3.13.0 --config scalardb.properties --schema-file schema.json --coordinator
+./gradlew bootRun
 ```
 
-ScalarDB Schema Loaderで型指定したいときに見た方がいいところ
-https://scalardb.scalar-labs.com/ja-jp/docs/latest/schema-loader
-
-## SKILLsの使い方
-### 実装したい時
+# 動作確認
 ```shell
-/coding
+# データの取得
+curl -X GET http://localhost:8080/api/reviews | jq
+
+# データの投入
+curl -X POST http://localhost:8080/api/reviews \
+    -H "Content-Type: application/json" \
+    -d '{
+      "productId": "PROD-12345",
+      "userId": "USER-67890",
+      "star": 5,
+      "comment": "とても良い商品でした。配送も早く、梱包も丁寧でした。"
+    }'
 ```
