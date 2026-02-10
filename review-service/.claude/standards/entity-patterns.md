@@ -15,10 +15,6 @@ public record <EntityName>(
     <Type> <field1>,
     <Type> <field2>
 ) {
-    // 更新用メソッド（新しいインスタンスを返す）
-    public <EntityName> with<Field>(<Type> new<Field>) {
-        return new <EntityName>(this.id, new<Field>, this.<field2>);
-    }
 }
 ```
 
@@ -45,9 +41,6 @@ public record Item(
     String name,
     int price
 ) {
-    public Item withPrice(int newPrice) {
-        return new Item(this.id, this.name, newPrice);
-    }
 }
 ```
 
@@ -61,9 +54,6 @@ public record OrderItem(
     String itemId,
     int quantity
 ) {
-    public OrderItem withQuantity(int newQuantity) {
-        return new OrderItem(this.orderId, this.itemId, newQuantity);
-    }
 }
 ```
 
@@ -77,15 +67,7 @@ public record Customer(
     String name,
     int creditLimit,
     int creditTotal
-) {
-    public Customer withCreditTotal(int newCreditTotal) {
-        return new Customer(this.id, this.name, this.creditLimit, newCreditTotal);
-    }
-
-    public Customer withName(String newName) {
-        return new Customer(this.id, newName, this.creditLimit, this.creditTotal);
-    }
-}
+) { }
 ```
 
 ## Record の自動生成メソッド
