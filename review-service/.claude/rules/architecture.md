@@ -142,7 +142,6 @@ src/main/java/com/review/
 
 - データベーステーブルとのマッピング
 - イミュータブルなデータ構造
-- `withXxx()` による更新
 
 ### DTO層
 
