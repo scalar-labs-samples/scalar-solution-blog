@@ -25,7 +25,7 @@ docker-compose up -d
 docker exec -it mysql bash
 mysql> mysql -u root -p # これでtest データベースと review テーブルが作成されているか確認
 # mysqlが起動したら下記のコマンドを実行
-java -jar scalardb-schema-loader-3.13.0 --config scalardb.properties --schema-file schema.json --coordinator
+java -jar scalardb-schema-loader-3.13.0.jar --config scalardb.properties --schema-file schema.json --coordinator
 ./gradlew bootRun
 ```
 
