@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.0.36
+    container_name: mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  scalardb-cluster:
+    image: ghcr.io/scalar-labs/scalardb-cluster-node-byol-premium:3.16.0
+    platform: linux/amd64
+    container_name: scalardb-cluster
+    pull_policy: missing
+    ports:
+      - "60053:60053"
+      - "9080:9080"
+    volumes:
+      - ./scalardb-cluster.properties:/scalardb-cluster/node/scalardb-cluster-node.properties
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,13 @@
+{
+  "test.reviews": {
+    "transaction": true,
+    "partition-key": ["id"],
+    "columns": {
+      "id": "TEXT",
+      "product_id": "TEXT",
+      "user_id": "TEXT",
+      "star": "INT",
+      "comment": "TEXT"
+    }
+  }
+}
